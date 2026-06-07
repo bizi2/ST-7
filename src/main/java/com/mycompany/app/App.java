@@ -2,54 +2,55 @@
 
 package com.mycompany.app;
 
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 public class App {
-    public static void main(String[] args) {
+    
+    public static void main(String[] args) throws Exception {
         System.setProperty("webdriver.chrome.driver", "C:\\chromedriver-win64\\chromedriver.exe");
         
-        ChromeOptions opts = new ChromeOptions();
-        opts.addArguments("--remote-allow-origins=*");
+        ChromeOptions opt = new ChromeOptions();
+        opt.setBinary("C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe");
+        opt.addArguments("--remote-allow-origins=*");
         
-        WebDriver driver = new ChromeDriver(opts);
+        WebDriver br = new ChromeDriver(opt);
         
         try {
-            System.out.println("=== NAZYROV ST-7 ===\n");
+            System.out.println("=== ST-7 ===\n");
             
-            // TASK 1
+            // 1
             System.out.println("[1] Password:");
-            driver.get("https://www.random.org/passwords/?num=1&len=12&format=plain&rnd=new");
-            Thread.sleep(2000);
-            String pwd = driver.getPageSource().trim();
-            System.out.println("    " + pwd);
+            br.get("https://www.calculator.net/password-generator.html");
             
-            // TASK 2
-            System.out.println("\n[2] IP Address:");
-            driver.get("https://api.ipify.org/?format=json");
-            Thread.sleep(1000);
-            String src = driver.getPageSource();
-            String ip = src.substring(src.indexOf(":") + 2, src.lastIndexOf("\""));
-            System.out.println("    " + ip);
+            WebDriverWait wt = new WebDriverWait(br, 15);
+            WebElement resBlock = wt.until(ExpectedConditions.presenceOfElementLocated(By.id("resultid")));
+            wt.until(d -> !resBlock.getText().trim().isEmpty());
             
-            // TASK 3
-            System.out.println("\n[3] Weather forecast:");
-            String url = "https://api.open-meteo.com/v1/forecast?latitude=56&longitude=44&hourly=temperature_2m,rain&timezone=Europe%2FMoscow&forecast_days=1";
-            driver.get(url);
-            Thread.sleep(2000);
-            String json = driver.getPageSource();
+            String passCode;
+            try {
+                passCode = resBlock.findElement(By.tagName("b")).getText().trim();
+            } catch (Exception e) {
+                passCode = resBlock.getText().trim();
+            }
+            System.out.println("    " + passCode);
             
-            Files.createDirectories(Paths.get("result"));
-            Files.write(Paths.get("result/forecast.txt"), json.getBytes());
-            System.out.println("    Weather data saved (" + json.length() + " bytes)");
+            // 2
+            System.out.println("\n[2] IP:");
+            String ipAddr = Task2.extractIP(br);
+            System.out.println("    " + ipAddr);
             
-        } catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
+            // 3
+            System.out.println("\n[3] Weather:");
+            Task3.showWeather(br);
+            
         } finally {
-            driver.quit();
+            br.quit();
         }
     }
 }
